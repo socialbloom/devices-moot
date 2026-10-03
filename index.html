@@ -994,6 +994,38 @@ function drawFound() {
 }
 drawMenus();
 
+// ── VISITS, TIME AND CLICKS (Marco, 2026-10-03: *"i want to keep track of visits and time spent and
+// butttons clicked"* — *"our own - simple"*, on bloom.nl). Sent only from devices-moot.bloom.nl, with
+// sendBeacon as plain text: no cookie, no answer read. The visitor is a random id kept in this browser.
+const STATS = 'https://bloom.nl/api/moot/events', statsOn = location.hostname === 'devices-moot.bloom.nl';
+const rid = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`);
+let visitor = null;
+try { visitor = localStorage.getItem('moot-visitor'); if (!visitor) { visitor = rid(); localStorage.setItem('moot-visitor', visitor); } } catch { visitor = rid(); }
+const visit = rid();
+function report(e) {
+  if (!statsOn) return;
+  try { navigator.sendBeacon(STATS, new Blob([JSON.stringify({ visitor, visit, ...e })], { type: 'text/plain' })); } catch { /* not counted */ }
+}
+report({ kind: 'visit' });
+// Time: only while the page is in front; sent each time it goes to the back or closes.
+let shownAt = document.visibilityState === 'visible' ? performance.now() : null;
+function reportTime() {
+  if (shownAt == null) return;
+  const seconds = Math.round((performance.now() - shownAt) / 1000);
+  shownAt = null;
+  if (seconds > 0) report({ kind: 'time', seconds });
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') reportTime(); else shownAt = performance.now(); });
+addEventListener('pagehide', reportTime);
+// Clicks: every button, by what it says — a mixer button with its channel's name, the fold with its bank's.
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  const strip = b.closest('.strip')?.querySelector('.head b')?.textContent, bank = b.closest('.bank')?.querySelector('.bankname')?.textContent;
+  const label = b.id === 'found' ? 'device line' : b.classList.contains('fold') ? `fold ${bank}` : `${strip ? `${strip} ` : b.closest('#tempo') ? 'tempo ' : ''}${b.textContent.trim() || b.title}`;
+  if (label) report({ kind: 'click', label: label.slice(0, 80) });
+}, true);
+
 // ── The frame ──────────────────────────────────────────────────────────────────────────────────
 function frame(t) {
   requestAnimationFrame(frame);
