@@ -115,6 +115,8 @@ body { background: #071013; color: var(--ink); font: 400 var(--t0)/1.45 var(--mo
 /* The sections, the Maschine's pads on the screen: the one playing pressed, the one coming marked. */
 #steer .arr { display: flex; gap: 3px; flex: none; }
 #steer .arr .act { padding: 2px 6px; font-size: 10px; }
+/* On the dark view a pressed button keeps its white edge, so it reads as a button that is on. */
+#steer .arr .act[aria-pressed="true"] { background: var(--ink); color: var(--panel2); border-color: var(--panel2); }
 #steer .arr .act.next { border-color: var(--accent); color: var(--accent); }
 #band #where, #band #phones { white-space: nowrap; flex: none; }
 
