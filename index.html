@@ -236,6 +236,28 @@ body { background: #071013; color: var(--ink); font: 400 var(--t0)/1.45 var(--mo
 .concept p { margin: 0 0 6px; color: var(--dim); line-height: 1.5; }
 .concept p.lead { font-size: 16px; color: var(--ink); font-weight: 600; letter-spacing: .02em; margin-bottom: 8px; }
 
+/* PLAY, before the music has started: it glows, softly, until pressed. */
+#band #sound.invite { background: #ffe2b8; border-color: #e9b876; color: var(--ink); font-weight: 700; animation: invite 1.8s ease-in-out infinite; }
+@keyframes invite { 50% { box-shadow: 0 0 0 5px rgba(255, 180, 106, .35), 0 0 18px rgba(255, 180, 106, .55); } }
+#band .found.none span { color: var(--accent); }
+#band .found.none:hover span { text-decoration: underline; }
+
+/* The camera strip, at the bottom of the score: keycaps that light when used and tick off. */
+#coach { position: fixed; left: 50%; bottom: 58px; transform: translateX(-50%); z-index: 3; display: flex; gap: 22px; align-items: center;
+  flex-wrap: wrap; justify-content: center; max-width: calc(100vw - 24px); pointer-events: none;
+  font: 400 12px/1 var(--mono); letter-spacing: .08em; color: #ffe2b8; text-shadow: 0 1px 6px rgba(0, 0, 0, .8);
+  animation: coachIn 1.2s ease both; transition: opacity 1.2s; }
+#coach[hidden], #coach .c[hidden] { display: none; }
+#coach.gone { opacity: 0; }
+@keyframes coachIn { from { opacity: 0; transform: translate(-50%, 8px); } }
+#coach .c { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; transition: opacity .6s; }
+#coach .c.done { opacity: .45; }
+#coach .c.done::after { content: '✓'; color: #8fe0a8; margin-left: 2px; animation: tick .5s ease; }
+@keyframes tick { from { transform: scale(2.2); opacity: 0; } }
+#coach kbd { display: inline-block; min-width: 22px; padding: 4px 6px; text-align: center; font: 700 11px/1 var(--mono); color: #ffe2b8;
+  background: rgba(6, 16, 18, .55); border: 1px solid rgba(255, 226, 184, .55); border-bottom-width: 3px; border-radius: 4px; transition: all .08s; }
+#coach kbd.lit { background: #ffe2b8; color: var(--ink); transform: translateY(2px); border-bottom-width: 1px; }
+
 </style>
 <!--
   INSTRUMENT-DESIGN-04, as it is sent (docs/01 §30) — no longer marked SPECIMEN. Its screen and its sound, on nine
@@ -253,7 +275,7 @@ body { background: #071013; color: var(--ink); font: 400 var(--t0)/1.45 var(--mo
   <span class="dim" id="where"></span>
   <button class="found" id="found" type="button" title="DEVICES — which are found, and how to set each up"><i></i><span></span></button>
   <button class="pad" id="padmode" type="button" hidden></button>
-  <button class="act" id="sound" type="button">SOUND OFF</button>
+  <button class="act invite" id="sound" type="button">▶ PLAY</button>
 </header>
 <!-- The genres and the sections: out of the menu bar, at the top centre of the view (Marco, 2026-10-03). -->
 <div id="whatwin" hidden role="dialog" aria-label="what 04 is"><div class="card"><div class="concept" id="whatconcept"></div><p class="dim">click anywhere or Escape to close</p></div></div>
@@ -263,6 +285,15 @@ body { background: #071013; color: var(--ink); font: 400 var(--t0)/1.45 var(--mo
 <!-- One row under the menu bar: the genres and sections at the centre, the chords at the right — they never overlap. -->
 <div id="toprow"><div id="steer"><span class="arr genres" id="genres" aria-label="the genres — from the next four-bar phrase"></span><span class="arr" id="arr" aria-label="the sections — the Maschine's pads"></span></div><div id="chords" aria-label="the chords — the Kontrol S61's keys: press and hold"></div></div>
 <div id="caption" aria-live="polite"></div>
+<!-- HOW TO MOVE THE CAMERA (Marco, 2026-10-03: *"Users need to know … how to move the camera ….. make it fun!"*):
+     keycaps that light when used and tick off; all done, the strip fades and stays gone in that browser. -->
+<div id="coach" hidden aria-label="moving the camera">
+  <span class="c" data-c="fly"><kbd data-k="w">W</kbd><kbd data-k="a">A</kbd><kbd data-k="s">S</kbd><kbd data-k="d">D</kbd> fly</span>
+  <span class="c" data-c="look"><kbd>drag</kbd> look</span>
+  <span class="c" data-c="zoom"><kbd>scroll</kbd> zoom</span>
+  <span class="c" data-c="note"><kbd>click a note</kbd> what it is</span>
+  <span class="c pad" data-c="pad" hidden><kbd>sticks</kbd> fly with the PS controller</span>
+</div>
 <div id="devwin" hidden role="dialog" aria-label="the devices: setup and connection">
   <div class="card">
     <div class="dh"><b>DEVICES</b><span class="dim" id="devmidi"></span><span class="grow"></span><button class="act" id="devclose" type="button">CLOSE</button></div>
@@ -402,7 +433,9 @@ async function setSound(on) {
 $('sound').onclick = () => (playing ? setSound(!soundOn) : begin(true));
 let phonesText = '';
 function drawSound() {
-  $('sound').textContent = soundOn ? 'SOUND ON' : 'SOUND OFF';
+  // Before the music has started, the button says what it does: PLAY, glowing (Marco: how to play the sound).
+  $('sound').textContent = !playing ? '▶ PLAY' : soundOn ? 'SOUND ON' : 'SOUND OFF';
+  $('sound').classList.toggle('invite', !playing);
   $('sound').setAttribute('aria-pressed', String(soundOn));
   const m = audio.mode();
   // Where the sound goes — in the 04 menu and on the SOUND button's tooltip.
@@ -592,14 +625,15 @@ canvas.addEventListener('pointermove', (e) => {
   if (!down) return;
   const dx = e.clientX - down.x, dy = e.clientY - down.y;
   down.moved += Math.abs(dx) + Math.abs(dy); down.x = e.clientX; down.y = e.clientY;
-  if (down.moved > 4) { score.drag(dx, dy); canvas.style.cursor = 'grabbing'; }
+  if (down.moved > 4) { score.drag(dx, dy); canvas.style.cursor = 'grabbing'; coachDone('look'); }
 });
-canvas.addEventListener('wheel', (e) => { e.preventDefault(); score.zoom(e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY); }, { passive: false });
+canvas.addEventListener('wheel', (e) => { e.preventDefault(); coachDone('zoom'); score.zoom(e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY); }, { passive: false });
 canvas.addEventListener('pointerup', (e) => {
   const was = down; down = null; canvas.style.cursor = '';
   if (!was || was.moved > 4) return;
   const hit = score.pick(e.clientX, e.clientY);
   if (!hit || hit.part < 0) return;
+  coachDone('note');
   const src = hit.event?.src;
   const i = src ? INDEX[src.stem] : hit.part;
   if (i == null) return;
@@ -891,6 +925,7 @@ function flyPad(dt) {
     if (pressed(r, 'square')) steer('HOLD', 'PS · SQUARE');
   } else {
     fly.fwd = r.fly.fwd; fly.side = r.fly.side;
+    if (r.fly.fwd || r.fly.side || r.look.x || r.look.y) coachDone('pad');
     if (r.look.x || r.look.y) score.drag(r.look.x * 520 * dt, r.look.y * 360 * dt);
   }
   if (r.zoom) score.zoom(r.zoom * 900 * dt);
@@ -1019,14 +1054,41 @@ addEventListener('click', (e) => {
 });
 $('whatconcept').innerHTML = CONCEPT.map((t, i) => (i ? `<p>${esc(t)}</p>` : `<p class="lead">${esc(t)}</p>`)).join('');
 $('found').onclick = openDevices;
-let foundWas = '';
+let foundWas = null, foundSet = new Set();
 function drawFound() {
-  const n = DEVICES.filter(devFound).length, k = `${n}`;
+  const got = DEVICES.filter(devFound), n = got.length, k = `${got.map((d) => d.id)}`;
   if (k === foundWas) return;
   foundWas = k;
-  $('found').querySelector('span').textContent = n ? `${n} found` : 'no devices';
+  // How to connect (Marco: *"Users need to know how to connect devices if they have any"*): nothing found,
+  // the status asks for one and opens DEVICES; one arriving is greeted at the lower left.
+  $('found').querySelector('span').textContent = n ? `${n} found` : '+ connect a device';
   $('found').classList.toggle('none', !n);
+  for (const d of got) if (!foundSet.has(d.id)) say(`✓ ${d.name.replace(/ — .*/, '')}`, ' — found and ready. DEVICES shows what it does here');
+  foundSet = new Set(got.map((d) => d.id));
+  $('coach').querySelector('.pad').hidden = !padId;
 }
+
+// THE CAMERA STRIP: each way to move ticks off when used; all done, it fades for good in this browser.
+const COACH = ['fly', 'look', 'zoom', 'note'];
+let coachSeen = new Set();
+try { coachSeen = new Set(JSON.parse(localStorage.getItem('04-coach') || '[]')); } catch { /* no storage: shown each time */ }
+function coachDone(c) {
+  if (coachSeen.has(c)) return;
+  coachSeen.add(c);
+  $('coach').querySelector(`[data-c=${c}]`)?.classList.add('done');
+  try { localStorage.setItem('04-coach', JSON.stringify([...coachSeen])); } catch { /* not remembered */ }
+  if (COACH.every((x) => coachSeen.has(x))) setTimeout(() => $('coach').classList.add('gone'), 1600);
+}
+if (!COACH.every((x) => coachSeen.has(x))) {
+  for (const c of coachSeen) $('coach').querySelector(`[data-c=${c}]`)?.classList.add('done');
+  setTimeout(() => { $('coach').hidden = false; }, 4800);    // after the light has come up
+}
+addEventListener('keydown', (e) => {
+  const k = $('coach').querySelector(`kbd[data-k="${e.key.toLowerCase()}"]`);
+  if (!k || e.metaKey || e.ctrlKey) return;
+  k.classList.add('lit'); coachDone('fly');
+});
+addEventListener('keyup', (e) => { $('coach').querySelector(`kbd[data-k="${e.key.toLowerCase()}"]`)?.classList.remove('lit'); });
 drawMenus();
 
 // ── The frame ──────────────────────────────────────────────────────────────────────────────────
