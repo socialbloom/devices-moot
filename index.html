@@ -113,9 +113,9 @@ body { background: #071013; color: var(--ink); font: 400 var(--t0)/1.45 var(--mo
 #side .kw { color: #e6c27a; margin-top: 2px; white-space: nowrap; }
 
 /* The sections, the Maschine's pads on the screen: the one playing pressed, the one coming marked. */
-#band .arr { display: flex; gap: 3px; flex: none; }
-#band .arr .act { padding: 2px 6px; font-size: 10px; }
-#band .arr .act.next { border-color: var(--accent); color: var(--accent); }
+#steer .arr { display: flex; gap: 3px; flex: none; }
+#steer .arr .act { padding: 2px 6px; font-size: 10px; }
+#steer .arr .act.next { border-color: var(--accent); color: var(--accent); }
 #band #where, #band #phones { white-space: nowrap; flex: none; }
 
 /* The chords, the Kontrol S61's keys on the screen: press and hold. */
@@ -179,11 +179,10 @@ body { background: #071013; color: var(--ink); font: 400 var(--t0)/1.45 var(--mo
 #mixer .bank.folded .strips { display: none; }
 #mixer .bank.folded { align-self: flex-end; }
 #mixer .bank.folded .bankhead { border-bottom: 0; }
-#band .genres { margin-right: 6px; padding-right: 8px; border-right: 1px solid var(--line); }
+#steer .genres { margin-right: 6px; padding-right: 8px; border-right: 1px solid var(--line); }
 /* THE MENU BAR (docs/01 §37): the menus at the left; the genre and section buttons; at the right where
    the music is, the devices found, the PS mode — a switch — and SOUND. */
 #band { z-index: 7; flex-wrap: nowrap; gap: 7px; padding-left: 8px; padding-right: 10px; }
-#band .genres { margin-right: 0; }
 #menus { display: flex; align-items: stretch; flex: none; }
 #menus > .m { position: relative; }
 #menus > .m > button { background: none; border: 0; border-radius: var(--radius); font: 400 var(--t0)/1.4 var(--mono); letter-spacing: .1em;
@@ -223,6 +222,10 @@ body { background: #071013; color: var(--ink); font: 400 var(--t0)/1.45 var(--mo
 #whatwin[hidden] { display: none; }
 #whatwin .card { max-width: 560px; margin: 0 16px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 22px; }
 #chords[hidden] { display: none; }
+/* The genres and the sections, at the top centre of the view, over the score. */
+#steer { position: fixed; top: calc(var(--top, 36px) + 12px); left: 50%; transform: translateX(-50%); z-index: 3; display: flex; align-items: center;
+  max-width: calc(100vw - 24px); flex-wrap: wrap; justify-content: center; row-gap: 4px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 5px 8px; }
 
 /* The concept: on the start card and at the top of the storyboard. */
 .concept { margin: 0 0 14px; padding: 0 0 12px; border-bottom: 1px solid var(--line); }
@@ -243,13 +246,13 @@ body { background: #071013; color: var(--ink); font: 400 var(--t0)/1.45 var(--mo
 <header id="band">
   <nav id="menus" aria-label="the menus"></nav>
   <span class="grow"></span>
-  <span class="arr genres" id="genres" aria-label="the genres — from the next four-bar phrase"></span>
-  <span class="arr" id="arr" aria-label="the sections — the Maschine's pads"></span>
   <span class="dim" id="where"></span>
   <button class="found" id="found" type="button" title="DEVICES — which are found, and how to set each up"><i></i><span></span></button>
   <button class="pad" id="padmode" type="button" hidden></button>
   <button class="act" id="sound" type="button">SOUND OFF</button>
 </header>
+<!-- The genres and the sections: out of the menu bar, at the top centre of the view (Marco, 2026-10-03). -->
+<div id="steer"><span class="arr genres" id="genres" aria-label="the genres — from the next four-bar phrase"></span><span class="arr" id="arr" aria-label="the sections — the Maschine's pads"></span></div>
 <div id="whatwin" hidden role="dialog" aria-label="what 04 is"><div class="card"><div class="concept" id="whatconcept"></div><p class="dim">click anywhere or Escape to close</p></div></div>
 <canvas id="world"></canvas>
 <div id="labels"></div>
