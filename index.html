@@ -105,7 +105,9 @@ body { background: #071013; color: var(--ink); font: 400 var(--t0)/1.45 var(--mo
 #title[hidden] { display: none; }
 #title.gone { opacity: 0; pointer-events: none; }
 #title:focus { outline: none; }
-#title h1 { margin: 0; font: 700 clamp(64px, 11vw, 160px)/1 var(--mono); letter-spacing: .08em; color: #ffe2b8;
+/* Marco, 2026-10-03: Helvetica Neue Condensed Bold. On a Mac it is there; elsewhere the nearest condensed bold. */
+#title h1 { margin: 0; font-family: "HelveticaNeue-CondensedBold", "Helvetica Neue Condensed Bold", "Helvetica Neue", "Arial Narrow", sans-serif;
+  font-weight: 700; font-stretch: condensed; font-size: clamp(80px, 14vw, 220px); line-height: 1; letter-spacing: 0; color: #ffe2b8;
   text-shadow: 0 2px 40px rgba(0, 0, 0, .6); user-select: none; }
 #mixer { overflow: visible; }
 #side .kx { color: #ffb08a; margin-top: 2px; white-space: nowrap; }
